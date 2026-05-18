@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>映像制作マニフェスト | 世界基準の設計思考と「積み上げ」の解像度</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1f2937;
+            --accent-color: #ff6b6b;
+            --light-bg: #1e293b;
+            --text-dark: #f1f5f9;
+            --text-gray: #cbd5e1;
+            --border-color: #334155;
+            --success-bg: #064e3b;
+            --success-border: #10b981;
+            --warning-bg: #78350f;
+            --warning-border: #f59e0b;
+            --card-bg: #0f172a;
+            --body-bg: #0a0e27;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            line-height: 1.8;
+            color: var(--text-dark);
+            background: var(--body-bg);
+            padding: 0;
+            margin: 0;
+        }
+
+        /* ダークモード優先 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: var(--body-bg);
+                color: var(--text-dark);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --primary-color: #1f2937;
+                --accent-color: #dc2626;
+                --light-bg: #f9fafb;
+                --text-dark: #111827;
+                --text-gray: #6b7280;
+                --border-color: #e5e7eb;
+                --success-bg: #ecfdf5;
+                --success-border: #10b981;
+                --warning-bg: #fef3c7;
+                --warning-border: #f59e0b;
+                --card-bg: #ffffff;
+                --body-bg: #ffffff;
+            }
+            
+            body {
+                background: var(--body-bg);
+                color: var(--text-dark);
+            }
+        }
+
+        /* ヘッダー */
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: var(--text-dark);
+            padding: 2rem 1rem;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-color);
+        }
+
+        header h1 {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: clamp(0.95rem, 3vw, 1.1rem);
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        header .subtitle {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        /* メインコンテンツ */
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem;
+        }
+
+        /* セクション */
+        section {
+            margin-bottom: 3rem;
+        }
+
+        section h2 {
+            font-size: clamp(1.3rem, 4vw, 2rem);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid var(--accent-color);
+            color: var(--accent-color);
+            position: relative;
+        }
+
+        section h2::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 1.5em;
+            background: var(--accent-color);
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        /* サブセクション */
+        .subsection {
+            margin-bottom: 2.5rem;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .subsection h3 {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .subsection-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            background: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        /* エッセンス */
+        .essence {
+            background: #1a2f4b;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+        }
+
+        .essence-title {
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .essence-text {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* トップチップスボックス */
+        .tips-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--success-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tips-box h4 {
+            color: #10b981;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tips-box h4::before {
+            content: '💡';
+            font-size: 1.2rem;
+        }
+
+        .tips-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tips-box li {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-gray);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .tips-box li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success-border);
+            font-weight: bold;
+        }
+
+        .tips-box li strong {
+            color: var(--text-dark);
+        }
+
+        /* AI活用ボックス */
+        .ai-role {
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid var(--warning-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-role h4 {
+            color: #fbbf24;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-role h4::before {
+            content: '🤖';
+            font-size: 1.2rem;
+        }
+
+        .ai-role p {
+            color: var(--text-gray);
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        /* 総括セクション */
+        .conclusion {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: var(--text-dark);
+            padding: 2rem 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .conclusion h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .conclusion p {
+            line-height: 1.8;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            opacity: 0.95;
+        }
+
+        /* テーブル風の情報 */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .info-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .info-card strong {
+            color: var(--accent-color);
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .info-card p {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+
+        /* フッター */
+        footer {
+            background: var(--card-bg);
+            color: var(--text-gray);
+            text-align: center;
+            padding: 2rem 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            margin-top: 3rem;
+        }
+
+        /* レスポンシブ調整 */
+        @media (max-width: 640px) {
+            main {
+                padding: 1rem;
+            }
+
+            section {
+                margin-bottom: 2rem;
+            }
+
+            .subsection {
+                padding: 1.2rem;
+            }
+
+            header {
+                padding: 1.5rem 1rem;
+            }
+        }
+
+        /* プリント対応 */
+        @media print {
+            body {
+                background: white;
+            }
+
+            header {
+                page-break-after: avoid;
+            }
+
+            section {
+                page-break-inside: avoid;
+            }
+
+            .subsection {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* スムーズスクロール */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* リンク */
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent-color);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>映像制作マニフェスト</h1>
+        <p>世界基準の設計思考と「積み上げ」の解像度</p>
+    </header>
+
+    <main>
+        <!-- 総論 -->
+        <section id="intro">
+            <h2>総論：出力の時代に、なぜ「設計の積層」が必要なのか</h2>
+            
+            <p style="font-size: 1rem; color: var(--text-gray); margin-bottom: 1.5rem; line-height: 1.9;">
+                現代のクリエイターは、ボタン一つで商業映画レベルのビジュアルを出力できる「魔法の杖」を持っています。しかし、世界中の優れた名作が観客の心を掴んで離さないのは、絵が綺麗だからではありません。発想、キャラクター、プロット、シナリオ、コンテという、各段階で「人間の心理と演出の計算」が何重にも積み上げられているからです。
+            </p>
+
+            <div style="background: rgba(245, 158, 11, 0.15); border-left: 4px solid var(--accent-color); padding: 1.2rem; border-radius: 4px; margin-bottom: 1.5rem;">
+                <strong style="display: block; margin-bottom: 0.5rem; color: #fbbf24;">💭 重要ポイント</strong>
+                <p style="font-size: 0.95rem; color: var(--text-gray); margin: 0;">
+                    プロセスを一段サボるごとに、作品の強度は致命的に低下します。AIという高速な具現化ツールを真に支配するために、まずは世界基準の設計の階段を上り、脳内設計図の解像度を徹底的に引き上げます。
+                </p>
+            </div>
+        </section>
+
+        <!-- 各セクション -->
+        <section id="sections">
+            <h2>各セクションにおける世界基準の積み上げと実践Tips</h2>
+
+            <!-- ① 発想と企画 -->
+            <div class="subsection">
+                <h3>
+                    <span class="subsection-number">①</span>
+                    発想と企画（コアの言語化）
+                </h3>
+
+                <div class="essence">
+                    <div class="essence-title">本質</div>
+                    <div class="essence-text">
+                        アイデアを「他人の脳内に同期できる構造」に変える。単なる思いつきを「企画」にするとは、作品の『背骨』を確定させる行為です。ハリウッドの商業映画シーンで最も重視されるのは、1〜2行で映画の全容、葛藤、商業的魅力を伝える「ログライン」の設計です。
+                    </div>
+                </div>
+
+                <div class="tips-box">
+                    <h4>世界の映像知見・トップチップス</h4>
+                    <ul>
+                        <li>
+                            <strong>「もし〜なら（What if...）」の思考法</strong><br>
+                            ピクサーや高名な脚本家が用いるアプローチ。「もし、おもちゃが人間がいないところで動いていたら？（トイ・ストーリー）」。この一言で世界観のルールと驚きが担保されます。
+                        </li>
+                        <li>
+                            <strong>皮肉（Irony）のスパイス</strong><br>
+                            優れたログラインには必ず「状況のミスマッチ」が含まれます。「嘘のつけない天才弁護士が、一切の嘘をつけなくなったら？（ライアー ライアー）」。この対立構造が観客の興味を引きます。
+                        </li>
+                        <li>
+                            <strong>普遍的テーマの埋め込み</strong><br>
+                            舞台が宇宙でもSFでも、根底にあるのは「親子の絆」「アイデンティティの喪失」など、人類共通の感情（ユニバーサル・テーマ）であるべきです。
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="ai-role">
+                    <h4>このセクションでのAIの役割</h4>
+                    <p>
+                        AIに企画を丸投げしてはいけません。自分のアイデアをぶつけ、「この設定において、観客が最も手垢がついている（手古臭い）と感じるステレオタイプな展開はどれか？」をLLMにリストアップさせ、それを排除・裏切るために使います。
+                    </p>
+                </div>
+            </div>
+<!--改ページ-->
+            <!-- ② キャラクター設定 -->
+            <div class="subsection">
+                <h3>
+                    <span class="subsection-number">②</span>
+                    キャラクター設定（履歴書と行動の必然性）
+                </h3>
+
+                <div class="essence">
+                    <div class="essence-title">本質</div>
+                    <div class="essence-text">
+                        外見をデザインする前に「人間というシステム」を構築する。観客が映画を見るのは、プロットを見るためではなく「キャラクターが試練にどう立ち向かうか」を見るためです。優れたキャラ設定とは、物語の推進力を生む「エンジン」の設計に他なりません。
+                    </div>
+                </div>
+
+                <div class="tips-box">
+                    <h4>世界の映像知見・トップチップス</h4>
+                    <ul>
+                        <li>
+                            <strong>Want（偽の欲求）とNeed（真の必要性）</strong><br>
+                            ハリウッド脚本術の金字塔。主人公が前半で「欲しい」と追い求める目に見える目標（Want）と、人間として成長するために本当に手に入れなければならない精神的真実（Need）のギャップを描きます。
+                        </li>
+                        <li>
+                            <strong>ゴースト（傷・トラウマ）</strong><br>
+                            キャラクターの過去にある「消えない傷跡」。これが現在の彼らの歪んだ価値観（ライ：嘘）を形成し、物語の中でそれを克服していくプロセスが感動を生みます。
+                        </li>
+                        <li>
+                            <strong>セーブ・ザ・キャット（Save the Cat!）</strong><br>
+                            キャラクターが登場してすぐに「猫を救う」ような、観客が一瞬で彼を好きになり、応援したくなるような好感度（または共感性）の仕掛けをはじめに配置します。
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="ai-role">
+                    <h4>このセクションでのAIの役割</h4>
+                    <p>
+                        内面の心理構造（傷と必要性）が完璧に決まってから、初めて画像生成AI（Midjourney等）を起動します。「彼の内面にある頑固さと隠された優しさ」を表現するための、具体的な服装、素材、瞳の光、ライティングを言語化し、マスタービジュアル（--cref）を固定します。
+                    </p>
+                </div>
+            </div>
+<!--改ページ-->
+            <!-- ③ プロット -->
+            <div class="subsection">
+                <h3>
+                    <span class="subsection-number">③</span>
+                    プロット（物語の骨組みと感情の設計図）
+                </h3>
+
+                <div class="essence">
+                    <div class="essence-title">本質</div>
+                    <div class="essence-text">
+                        出来事の羅列を「感情を揺さぶる因果律」に変換する。プロットとは「何が起きたか」ではありません。「その結果、登場人物の感情がどう激変したか」の構造です。世界の映画は、人間が最もカタルシスを感じる「3幕構成（設定、対立、解決）」の黄金比率で骨組みが組まれています。
+                    </div>
+                </div>
+
+                <div class="tips-box">
+                    <h4>世界の映像知見・トップチップス</h4>
+                    <ul>
+                        <li>
+                            <strong>「そして（And Then）」の排除</strong><br>
+                            「Aが起きた、そしてBが起きた、そしてCが起きた」という羅列は最悪のプロットです。南パークのクリエイターらが提唱する「だから（Therefore）」か「しかし（But）」の接続詞でしかシーンを繋いではいけません。すべてのシーンは前のシーンの「結果」であるべきです。
+                        </li>
+                        <li>
+                            <strong>ミッドポイント（折り返し地点）の罠</strong><br>
+                            物語のちょうど真ん中で、主人公に大成功、あるいは大失敗を与え、物語の方向性を完全に反転（ギアチェンジ）させます。これにより観客の「中弛み」を防ぎます。
+                        </li>
+                        <li>
+                            <strong>インサイティング・インシデント（動機となる事件）</strong><br>
+                            冒頭10%までに主人公の日常を粉々に破壊する事件を起こし、彼を「引き返せない旅」へ強制的に出発させます。
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="ai-role">
+                    <h4>このセクションでのAIの役割</h4>
+                    <p>
+                        LLMを構造のバグチェッカーとして用います。「このミッドポイントから後半への展開において、因果関係が飛躍している部分や、観客の感情のテンポが冷める箇所を3つ指摘して」と問い、骨組みの強度をロジカルに検証します。
+                    </p>
+                </div>
+            </div>
+<!--改ページ-->
+            <!-- ④ シナリオ/脚本 -->
+            <div class="subsection">
+                <h3>
+                    <span class="subsection-number">④</span>
+                    シナリオ／脚本（セリフとト書きの映像化）
+                </h3>
+
+                <div class="essence">
+                    <div class="essence-title">本質</div>
+                    <div class="essence-text">
+                        文学的な言葉を「カメラとマイクで捉えられる物理現象」に翻訳する。脚本は読ませるための小説ではなく、映像を作るための「設計書」です。優れた脚本家は、文章そのものではなく、その文章が読者の脳内に映し出す「映像の密度」で勝負します。
+                    </div>
+                </div>
+
+                <div class="tips-box">
+                    <h4>世界の映像知見・トップチップス</h4>
+                    <ul>
+                        <li>
+                            <strong>Show, Don't Tell（語るな、見せろ）</strong><br>
+                            映像表現の絶対原則。「私は怒っている」と台詞で言わせてはいけない。コップを置く手の強さ、乱れる呼吸、ト書きに書かれた物理的な行動で、観客にその感情を「推測」させます。
+                        </li>
+                        <li>
+                            <strong>サブテキスト（言外の意味）</strong><br>
+                            優れた台詞には必ず裏の意味があります。愛し合う二人が「天気がいいね」と言い合うとき、言葉の裏には「あなたと入れて幸せ」というサブテキストが流れています。説明的な台詞は作品をチープにします。
+                        </li>
+                        <li>
+                            <strong>視覚的ディテールへの分解</strong><br>
+                            ト書きに「美しい部屋」と書いてはいけません。どのような光が差し込み、どんな調度品が埃を被っているのか、カメラが写すべき物質のディテールを徹底的に解像度を上げて描写します。
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="ai-role">
+                    <h4>このセクションでのAIの役割</h4>
+                    <p>
+                        あなたが極限まで解像度を高めて書いた具体的なト書き（光、構図、物質の質感）は、そのまま動画生成AIへの「最高品質のプロンプト」に変貌します。人間が物理現象に落とし込んだ脚本だからこそ、AIは映画的な構図と光を正しく再現できます。
+                    </p>
+                </div>
+            </div>
+<!--改ページ-->
+            <!-- ⑤ 絵コンテ -->
+            <div class="subsection">
+                <h3>
+                    <span class="subsection-number">⑤</span>
+                    絵コンテ（構図・時間・カット割りの最終演出）
+                </h3>
+
+                <div class="essence">
+                    <div class="essence-title">本質</div>
+                    <div class="essence-text">
+                        観客の「視線の誘導」と「感情の時間軸」を完全に支配する。絵コンテはイラストのコレクションではありません。映像という時間の流れの中で、観客の脳にどう情報を与え、どう感情をコントロールするかをミリ秒単位で確定させる最終演出工程です。
+                    </div>
+                </div>
+
+                <div class="tips-box">
+                    <h4>世界の映像知見・トップチップス</h4>
+                    <ul>
+                        <li>
+                            <strong>すべてのサイズとアングルに理由を</strong><br>
+                            なぜクローズアップ（顔の寄り）なのか？それはキャラの心の動揺を見せるためです。なぜローアングルなのか？それは対象の圧倒的な権力や恐怖を描くためです。「なんとなく格好いいから」で選んだアングルは演出を殺します。
+                        </li>
+                        <li>
+                            <strong>イマジナリーライン（180度ルール）の死守</strong><br>
+                            会話する二人の位置関係を観客に誤認させないための世界基準のルール。これを意図なく破ると、空間認識が崩壊し観客は冷めます。
+                        </li>
+                        <li>
+                            <strong>インとアウトの編集運動</strong><br>
+                            前のカットの被写体の動きのベクトル（例：右から左へ走る）を、次のカットでどう受けるか。時間の連続性と、カットが変わった瞬間の視覚的快感をコンテ段階で完全に計算します。
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="ai-role">
+                    <h4>このセクションでのAIの役割</h4>
+                    <p>
+                        自分がカット割りした明確な構図の原画を画像AIに出させ、動画AIのカメラ制御（Pan, Tilt, Zoom）を数値や正確な指定で動かします。AIが出したランダムな映像を並べるのではなく、自分のコンテにAIのパワーを「強制的にハメ込む」ディレクションを行います。
+                    </p>
+                </div>
+            </div>
+        </section>
+<!--改ページ-->
+        <!-- 総括 -->
+        <section id="conclusion">
+            <h2>総括：脳内設計図の解像度が、作品の格を決定する</h2>
+
+            <div class="conclusion">
+                <h3>最後に</h3>
+                <p>
+                    学生の皆さん、覚えておいてください。AIという職人は、人間の脳内にある設計図の解像度を1ミリも超えることはできません。設計図が凡庸であれば、AIは凄まじい画質で「凡庸なゴミ」を出力します。
+                </p>
+                <p>
+                    世界中の先人たちが積み上げてきたハウツー、心理学、映像理論を武器に、各ステップで徹底的に物語と演出の解像度を上げてください。その泥臭い積み上げを完了した者だけが、AIという翼を得て、世界を揺さぶる本物の映像作家になれるのです。
+                </p>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <div class="info-grid">
+                    <div class="info-card">
+                        <strong>🎬 5つのステップ</strong>
+                        <p>発想 → キャラ → プロット → 脚本 → 絵コンテ</p>
+                    </div>
+                    <div class="info-card">
+                        <strong>🧠 鍵となるマインドセット</strong>
+                        <p>設計の解像度 = 出力の質</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Global Cinema Masterclass Methodology Manual</p>
+        <p>Generated from NotebookLM Source Document v3</p>
+        <p style="margin-top: 1rem; opacity: 0.7;">このドキュメントはスマートフォン・タブレット・デスクトップでの閲覧に対応しています。</p>
+    </footer>
+</body>
+</html>
