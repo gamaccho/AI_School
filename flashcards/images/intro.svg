@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0d0d1a"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <!-- AI brain circuit -->
+  <circle cx="200" cy="150" r="70" fill="none" stroke="#00f5d4" stroke-width="1.5" opacity="0.4"/>
+  <circle cx="200" cy="150" r="50" fill="none" stroke="#00f5d4" stroke-width="1" opacity="0.3"/>
+  <!-- Neural nodes -->
+  <circle cx="200" cy="80" r="6" fill="#00f5d4" filter="url(#glow)"/>
+  <circle cx="270" cy="120" r="5" fill="#f72585" filter="url(#glow)"/>
+  <circle cx="260" cy="200" r="6" fill="#00f5d4" filter="url(#glow)"/>
+  <circle cx="140" cy="210" r="5" fill="#f72585" filter="url(#glow)"/>
+  <circle cx="130" cy="120" r="6" fill="#00f5d4" filter="url(#glow)"/>
+  <circle cx="200" cy="150" r="8" fill="#7209b7" filter="url(#glow)"/>
+  <!-- Connections -->
+  <line x1="200" y1="80" x2="270" y2="120" stroke="#00f5d4" stroke-width="1" opacity="0.5"/>
+  <line x1="270" y1="120" x2="260" y2="200" stroke="#f72585" stroke-width="1" opacity="0.5"/>
+  <line x1="260" y1="200" x2="140" y2="210" stroke="#00f5d4" stroke-width="1" opacity="0.5"/>
+  <line x1="140" y1="210" x2="130" y2="120" stroke="#f72585" stroke-width="1" opacity="0.5"/>
+  <line x1="130" y1="120" x2="200" y2="80" stroke="#00f5d4" stroke-width="1" opacity="0.5"/>
+  <line x1="200" y1="80" x2="200" y2="150" stroke="#7209b7" stroke-width="1.5" opacity="0.7"/>
+  <line x1="270" y1="120" x2="200" y2="150" stroke="#7209b7" stroke-width="1.5" opacity="0.7"/>
+  <line x1="260" y1="200" x2="200" y2="150" stroke="#7209b7" stroke-width="1.5" opacity="0.7"/>
+  <line x1="140" y1="210" x2="200" y2="150" stroke="#7209b7" stroke-width="1.5" opacity="0.7"/>
+  <line x1="130" y1="120" x2="200" y2="150" stroke="#7209b7" stroke-width="1.5" opacity="0.7"/>
+  <!-- Wand -->
+  <line x1="310" y1="60" x2="240" y2="130" stroke="#ffd60a" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="318,45 325,65 305,58" fill="#ffd60a" opacity="0.9"/>
+  <!-- Sparkles -->
+  <text x="330" y="50" font-size="12" fill="#ffd60a" opacity="0.8">✦</text>
+  <text x="345" y="80" font-size="8" fill="#00f5d4" opacity="0.7">✦</text>
+  <text x="315" y="95" font-size="6" fill="#f72585" opacity="0.8">✦</text>
+  <!-- Label -->
+  <text x="200" y="265" text-anchor="middle" font-family="monospace" font-size="11" fill="#00f5d4" opacity="0.8" letter-spacing="3">AI × CREATOR</text>
+</svg>

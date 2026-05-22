@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI映像制作 フラッシュカード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Space+Mono:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #08090f;
+    --surface:  #0f1018;
+    --panel:    #13141f;
+    --border:   #1e2035;
+    --teal:     #00f5d4;
+    --pink:     #f72585;
+    --gold:     #ffd60a;
+    --purple:   #7209b7;
+    --text:     #e8eaf0;
+    --muted:    #6b7394;
+    --card-h:   380px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── Grid noise texture overlay ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(0,245,212,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 90%, rgba(247,37,133,0.04) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ─── Header ─── */
+  header {
+    position: relative; z-index: 10;
+    padding: 32px 40px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 24px;
+    background: linear-gradient(180deg, rgba(0,245,212,0.03) 0%, transparent 100%);
+  }
+  .logo-mark {
+    width: 44px; height: 44px;
+    border: 2px solid var(--teal);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px; color: var(--teal);
+    letter-spacing: -1px;
+    box-shadow: 0 0 20px rgba(0,245,212,0.25);
+  }
+  .header-text h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px; letter-spacing: 3px;
+    color: var(--teal); text-transform: uppercase;
+  }
+  .header-text p {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--text); margin-top: 2px;
+  }
+  .header-right {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .progress-ring-wrap { position: relative; width: 56px; height: 56px; }
+  .progress-ring-wrap svg { transform: rotate(-90deg); }
+  .progress-ring-track { fill: none; stroke: var(--border); stroke-width: 3; }
+  .progress-ring-fill {
+    fill: none; stroke: var(--teal); stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 157; stroke-dashoffset: 157;
+    transition: stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1);
+  }
+  .progress-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace; font-size: 11px; color: var(--teal);
+  }
+
+  /* ─── Category tabs ─── */
+  .tabs-bar {
+    position: relative; z-index: 10;
+    display: flex; gap: 4px;
+    padding: 16px 40px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .tabs-bar::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 12px; cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { border-color: var(--teal); color: var(--text); }
+  .tab-btn.active {
+    background: rgba(0,245,212,0.08);
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+  .tab-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+  .tab-count {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    background: var(--border); border-radius: 10px;
+    padding: 1px 6px; color: var(--muted);
+  }
+
+  /* ─── Main layout ─── */
+  .main {
+    position: relative; z-index: 1;
+    max-width: 920px; margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  /* ─── Category hero ─── */
+  .category-hero {
+    display: flex; gap: 24px;
+    margin-bottom: 40px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .hero-image {
+    width: 220px; flex-shrink: 0;
+  }
+  .hero-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-content {
+    padding: 24px 24px 24px 8px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .hero-tag {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 3px; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .hero-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 26px; font-weight: 700;
+    line-height: 1.3; margin-bottom: 10px;
+  }
+  .hero-desc {
+    font-size: 13px; color: var(--muted); line-height: 1.7;
+  }
+  .hero-stats {
+    margin-top: 16px;
+    display: flex; gap: 16px;
+  }
+  .hero-stat {
+    display: flex; flex-direction: column;
+  }
+  .stat-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px; font-weight: 700;
+  }
+  .stat-label {
+    font-size: 10px; color: var(--muted); margin-top: 2px;
+  }
+
+  /* ─── Card counter ─── */
+  .deck-nav {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .deck-pos {
+    font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted);
+  }
+  .deck-nav .spacer { flex: 1; }
+  .nav-btn {
+    width: 36px; height: 36px; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--text);
+    font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover:not(:disabled) { border-color: var(--teal); color: var(--teal); }
+  .nav-btn:disabled { opacity: 0.25; cursor: default; }
+  .shuffle-btn {
+    padding: 0 14px; width: auto; font-size: 11px;
+    font-family: 'Space Mono', monospace; letter-spacing: 1px;
+    color: var(--muted);
+  }
+  .shuffle-btn:hover { color: var(--gold) !important; border-color: var(--gold) !important; }
+
+  /* ─── Flashcard ─── */
+  .card-scene {
+    perspective: 1200px;
+    height: var(--card-h);
+    cursor: pointer;
+    margin-bottom: 28px;
+  }
+  .card-inner {
+    position: relative;
+    width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+  }
+  .card-scene.flipped .card-inner { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    border-radius: 14px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .card-front {
+    background: var(--panel);
+    border: 1px solid var(--border);
+  }
+  .card-back {
+    background: var(--surface);
+    border: 1px solid rgba(0,245,212,0.3);
+    transform: rotateY(180deg);
+  }
+
+  /* Front */
+  .card-front-accent {
+    height: 4px;
+    background: linear-gradient(90deg, var(--teal), var(--purple));
+  }
+  .card-front-inner {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 36px 48px; text-align: center; gap: 16px;
+  }
+  .card-q-label {
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    letter-spacing: 4px; color: var(--muted);
+    text-transform: uppercase;
+  }
+  .card-question {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 20px; line-height: 1.7; font-weight: 700;
+    color: var(--text);
+  }
+  .card-question mark {
+    background: none;
+    color: var(--teal);
+    font-style: normal;
+  }
+  .card-flip-hint {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 2px;
+    display: flex; align-items: center; gap: 8px;
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
+  .card-front-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-num-badge {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: var(--muted);
+  }
+  .card-cat-badge {
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid currentColor;
+    letter-spacing: 1px;
+  }
+
+  /* Back */
+  .card-back-header {
+    padding: 20px 28px 0;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .answer-line {
+    width: 28px; height: 2px;
+    background: var(--teal);
+    border-radius: 1px;
+  }
+  .answer-label {
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    letter-spacing: 3px; color: var(--teal);
+  }
+  .card-back-inner {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px 48px; text-align: center; gap: 12px;
+  }
+  .card-answer {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 28px; font-weight: 700;
+    line-height: 1.5; color: var(--teal);
+  }
+  .card-answer-sub {
+    font-size: 13px; color: var(--muted); line-height: 1.6;
+    max-width: 500px;
+  }
+  .card-back-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(0,245,212,0.12);
+    display: flex; gap: 10px; justify-content: center;
+  }
+  .rate-btn {
+    flex: 1; max-width: 140px;
+    padding: 8px 0; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 1px; cursor: pointer;
+    transition: all 0.15s; color: var(--muted);
+  }
+  .rate-btn.good { border-color: var(--teal); color: var(--teal); }
+  .rate-btn.good:hover { background: rgba(0,245,212,0.1); }
+  .rate-btn.again { border-color: var(--pink); color: var(--pink); }
+  .rate-btn.again:hover { background: rgba(247,37,133,0.1); }
+
+  /* ─── Mini progress bar under card ─── */
+  .card-progress-bar {
+    height: 3px; border-radius: 2px;
+    background: var(--border);
+    margin-bottom: 32px; overflow: hidden;
+  }
+  .card-progress-fill {
+    height: 100%; border-radius: 2px;
+    background: linear-gradient(90deg, var(--teal), var(--purple));
+    transition: width 0.4s ease;
+  }
+
+  /* ─── All cards grid ─── */
+  .all-cards-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .all-cards-header h2 {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    letter-spacing: 3px; color: var(--muted); text-transform: uppercase;
+  }
+  .all-cards-header hr { flex: 1; border: none; border-top: 1px solid var(--border); }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .mini-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  }
+  .mini-card:hover {
+    border-color: var(--teal);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .mini-q {
+    font-size: 12px; line-height: 1.6; color: var(--muted);
+    margin-bottom: 8px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .mini-a {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--text);
+  }
+  .mini-num {
+    position: absolute; top: 10px; right: 12px;
+    font-family: 'Space Mono', monospace; font-size: 9px; color: var(--border);
+  }
+  .mini-card.learned { opacity: 0.5; }
+  .mini-card.learned::after {
+    content: '✓'; position: absolute; top: 8px; right: 8px;
+    font-size: 11px;
+  }
+
+  /* ─── Completion banner ─── */
+  .completion-banner {
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    height: var(--card-h);
+    background: var(--panel);
+    border: 1px solid rgba(0,245,212,0.3);
+    border-radius: 14px;
+    margin-bottom: 28px;
+    text-align: center; padding: 40px;
+  }
+  .completion-banner.show { display: flex; }
+  .completion-icon {
+    font-size: 48px; margin-bottom: 16px;
+    animation: spin 1s ease-out;
+  }
+  @keyframes spin { from{transform:rotate(-180deg) scale(0)} to{transform:rotate(0deg) scale(1)} }
+  .completion-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 24px; font-weight: 700;
+    color: var(--teal); margin-bottom: 8px;
+  }
+  .completion-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .restart-btn {
+    padding: 12px 32px; border-radius: 8px;
+    border: 1px solid var(--teal);
+    background: rgba(0,245,212,0.1);
+    color: var(--teal);
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    letter-spacing: 2px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .restart-btn:hover { background: rgba(0,245,212,0.2); }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 640px) {
+    header { padding: 20px 16px; }
+    .tabs-bar { padding: 12px 16px; }
+    .main { padding: 24px 16px; }
+    .category-hero { flex-direction: column; }
+    .hero-image { width: 100%; height: 160px; }
+    .card-question { font-size: 16px; }
+    .card-answer { font-size: 22px; }
+    .card-front-inner, .card-back-inner { padding: 24px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">AI</div>
+  <div class="header-text">
+    <h1>Film Study · Flash Cards</h1>
+    <p>AI映像制作 学習カード</p>
+  </div>
+  <div class="header-right">
+    <div class="progress-ring-wrap">
+      <svg width="56" height="56" viewBox="0 0 56 56">
+        <circle class="progress-ring-track" cx="28" cy="28" r="25"/>
+        <circle class="progress-ring-fill" id="ringFill" cx="28" cy="28" r="25"/>
+      </svg>
+      <div class="progress-label" id="ringLabel">0%</div>
+    </div>
+  </div>
+</header>
+
+<div class="tabs-bar" id="tabsBar"></div>
+
+<div class="main">
+  <div class="category-hero" id="categoryHero"></div>
+
+  <div class="deck-nav">
+    <span class="deck-pos" id="deckPos"></span>
+    <div class="spacer"></div>
+    <button class="nav-btn shuffle-btn" id="shuffleBtn" title="シャッフル">⇄ SHUFFLE</button>
+    <button class="nav-btn" id="prevBtn">←</button>
+    <button class="nav-btn" id="nextBtn">→</button>
+  </div>
+
+  <div class="card-scene" id="cardScene">
+    <div class="card-inner" id="cardInner">
+      <div class="card-face card-front" id="cardFront">
+        <div class="card-front-accent"></div>
+        <div class="card-front-inner">
+          <span class="card-q-label">QUESTION</span>
+          <div class="card-question" id="cardQuestion"></div>
+          <span class="card-flip-hint">▸ クリックして答えを見る</span>
+        </div>
+        <div class="card-front-footer">
+          <span class="card-num-badge" id="cardNumBadge"></span>
+          <span class="card-cat-badge" id="cardCatBadge"></span>
+        </div>
+      </div>
+      <div class="card-face card-back" id="cardBack">
+        <div class="card-back-header">
+          <div class="answer-line"></div>
+          <span class="answer-label">ANSWER</span>
+        </div>
+        <div class="card-back-inner">
+          <div class="card-answer" id="cardAnswer"></div>
+          <div class="card-answer-sub" id="cardAnswerSub"></div>
+        </div>
+        <div class="card-back-footer">
+          <button class="rate-btn again" id="rateAgain">✕ もう一度</button>
+          <button class="rate-btn good"  id="rateGood">✓ 覚えた！</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="completion-banner" id="completionBanner">
+    <div class="completion-icon">🎬</div>
+    <div class="completion-title">セクション完了！</div>
+    <div class="completion-sub" id="completionSub"></div>
+    <button class="restart-btn" id="restartBtn">▸ もう一度挑戦</button>
+  </div>
+
+  <div class="card-progress-bar">
+    <div class="card-progress-fill" id="cardProgressFill"></div>
+  </div>
+
+  <div class="all-cards-header">
+    <h2>全カード一覧</h2>
+    <hr>
+  </div>
+  <div class="cards-grid" id="cardsGrid"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════
+const CATEGORIES = [
+  {
+    id: 'all',
+    name: 'すべて',
+    color: '#00f5d4',
+    image: 'images/intro.svg',
+    tag: 'COMPLETE DECK',
+    title: 'AI映像制作 全カード',
+    desc: '映像制作の全プロセスを網羅した75枚のフラッシュカード。発想から絵コンテまで。',
+  },
+  {
+    id: 'intro',
+    name: 'イントロ',
+    color: '#00f5d4',
+    image: 'images/intro.svg',
+    tag: 'SECTION 00',
+    title: 'AI時代のクリエイター',
+    desc: 'AIが映像制作に与えるインパクトと、クリエイターが磨くべき脳内能力について。',
+  },
+  {
+    id: 'planning',
+    name: '発想と企画',
+    color: '#ffd60a',
+    image: 'images/planning.svg',
+    tag: 'SECTION 01',
+    title: '発想と企画の技術',
+    desc: 'ログライン、What-if思考、ステレオタイプ排除。アイデアを「企画」に変換する構造化技術。',
+  },
+  {
+    id: 'character',
+    name: 'キャラクター',
+    color: '#f72585',
+    image: 'images/character.svg',
+    tag: 'SECTION 02',
+    title: 'キャラクター設計',
+    desc: 'Want/Need/Ghost/Lie——人間のシステムとして内面を構築し、観客を惹きつける仕掛け。',
+  },
+  {
+    id: 'plot',
+    name: 'プロット',
+    color: '#7209b7',
+    image: 'images/plot.svg',
+    tag: 'SECTION 03',
+    title: 'プロット構成',
+    desc: '3幕構成・ミッドポイント・But/Therefore——感情を揺さぶる因果律を設計する。',
+  },
+  {
+    id: 'screenplay',
+    name: '脚本',
+    color: '#ffd60a',
+    image: 'images/screenplay.svg',
+    tag: 'SECTION 04',
+    title: '脚本・ト書き',
+    desc: 'Show Don\'t Tell、サブテキスト、物理現象へのトランスレーション——映像設計書の書き方。',
+  },
+  {
+    id: 'storyboard',
+    name: '絵コンテ',
+    color: '#f72585',
+    image: 'images/storyboard.svg',
+    tag: 'SECTION 05',
+    title: '絵コンテと演出',
+    desc: 'カメラサイズ・アングル・イマジナリーライン・編集ベクトル——ミリ秒単位の感情制御。',
+  },
+];
+
+const RAW_CARDS = [
+  // ── INTRO ──
+  { cat:'intro', q:'現代のクリエイターが「魔法の杖」のようにビジュアルを出力できるようになった背景にあるツールは何ですか？', a:'AI（人工知能）' },
+  { cat:'intro', q:'名作が観客の心を掴む理由は、映像の綺麗さではなく、各段階で何が積み上げられているからですか？', a:'人間の心理と演出の計算' },
+  { cat:'intro', q:'映像制作のプロセスを一段サボるごとに、作品の_____は致命的に低下します。', a:'強度' },
+  { cat:'intro', q:'AIというツールを支配するために、クリエイターが引き上げるべき脳内の能力は何ですか？', a:'設計図の解像度' },
+  { cat:'intro', q:'映像制作の5つのステップを正しい順序で並べなさい。', a:'発想 → キャラ → プロット → 脚本 → 絵コンテ' },
+  { cat:'intro', q:'設計の解像度が高ければ高いほど、最終的な「_____」の質が決定されます。', a:'出力' },
+  { cat:'intro', q:'AIという職人は、人間の脳内にある設計図の何を越えることはできませんか？', a:'解像度' },
+  { cat:'intro', q:'設計図が凡庸な場合、AIが凄まじい画質で出力してしまうものを何と表現していますか？', a:'凡庸なゴミ' },
+  { cat:'intro', q:'映像制作において「泥臭い積み上げ」を完了した者だけが、AIという何を得ることができますか？', a:'翼' },
+  { cat:'intro', q:'「映像制作マニフェスト」において、AI時代にこそ学ぶべきだと強調されているものは何ですか？', a:'先人たちが積み上げてきた映像理論（ハウツー、心理学など）' },
+  { cat:'intro', q:'「映像制作マニフェスト」が掲げる最終的なメッセージは何ですか？', a:'脳内設計図の解像度が作品の格を決定する。' },
+  { cat:'intro', q:'映像作家が世界を揺さぶるために、AIを使う前に徹底すべきことは何ですか？', a:'物語と演出の解像度を上げること。' },
+
+  // ── PLANNING ──
+  { cat:'planning', q:'「発想と企画」のセクションにおける本質とは、アイデアをどのような構造に変えることですか？', a:'他人の脳内に同期できる構造' },
+  { cat:'planning', q:'単なる思いつきを「企画」へと昇華させるために確定させるべき要素を、体の部位に例えて何と呼びますか？', a:'背骨' },
+  { cat:'planning', q:'ハリウッドで重視される、1〜2行で映画の全容・葛藤・魅力を伝える設計図を何と呼びますか？', a:'ログライン' },
+  { cat:'planning', q:'ピクサーや脚本家が用いる、「もし〜だったら？」と仮定して世界観を作る思考法を何と呼びますか？', a:'「もし〜なら（What if...）」の思考法' },
+  { cat:'planning', q:'優れたログラインに含まれるべき、観客の興味を引く「状況のミスマッチ」を何と呼びますか？', a:'皮肉（Irony）' },
+  { cat:'planning', q:'舞台設定がSFであっても、根底にあるべき人類共通の感情を何と呼びますか？', a:'普遍的テーマ（ユニバーサル・テーマ）' },
+  { cat:'planning', q:'企画段階でAI（LLM）を活用する際、どのようなリストを出力させて排除に役立てるべきですか？', a:'ステレオタイプな（古臭い）展開のリスト' },
+  { cat:'planning', q:'AIに「ステレオタイプな展開」をリストアップさせる目的は何ですか？', a:'それを排除し、観客の予想を裏切るため。' },
+  { cat:'planning', q:'ピクサーの「トイ・ストーリー」のログラインにおける「もし〜なら」の問いは何ですか？', a:'もし、おもちゃが人間がいないところで動いていたら？' },
+  { cat:'planning', q:'「ライアー・ライアー」のログラインに見られる「皮肉（Irony）」の要素は何ですか？', a:'嘘を武器にする弁護士が、一切の嘘をつけなくなること。' },
+
+  // ── CHARACTER ──
+  { cat:'character', q:'「キャラクター設定」の本質とは、外見をデザインする前に何を構築することですか？', a:'人間というシステム' },
+  { cat:'character', q:'観客が映画を見る真の目的は、プロットそのものではなく、キャラクターが何をする姿を見ることですか？', a:'試練にどう立ち向かうか' },
+  { cat:'character', q:'キャラクターが物語を前に進めるために果たす役割を、機械の部品に例えて何と呼びますか？', a:'エンジン' },
+  { cat:'character', q:'主人公が前半で追い求める、目に見える目標や感情的な欲望を指す用語は何ですか？', a:'Want' },
+  { cat:'character', q:'主人公が成長するために真に受け入れるべき精神的真実や使命を指す用語は何ですか？', a:'Need' },
+  { cat:'character', q:'キャラクターの過去にある、現在の歪んだ価値観を形成する「傷・トラウマ」を何と呼びますか？', a:'ゴースト' },
+  { cat:'character', q:'ゴーストによって形成された、物語の中で克服すべきキャラクターの「歪んだ価値観」を何と呼びますか？', a:'ライ（嘘）' },
+  { cat:'character', q:'観客が一瞬でキャラクターを好きになり、応援したくなるように配置する仕掛けを何と呼びますか？', a:'セーブ・ザ・キャット（Save the Cat!）' },
+  { cat:'character', q:'キャラクターの内面心理が決まった後、画像生成AIでマスタービジュアルを固定するために使う機能を何と呼びますか？', a:'--cref（キャラクター・リファレンス）' },
+  { cat:'character', q:'キャラクター設定において、物語の推進力を生むために必要なのは「外見」よりも「_____」である。', a:'内面の心理構造（システム）' },
+  { cat:'character', q:'キャラクターの「Want」と「Need」の間に生まれる「_____」を描くことが感動に繋がります。', a:'ギャップ（対立）' },
+  { cat:'character', q:'キャラクターが「ライ（嘘）」を克服するプロセスは、観客にどのような感情を与えますか？', a:'感動' },
+  { cat:'character', q:'キャラクターの「Want」は表面的な欲求ですが、「Need」は何に関連する使命ですか？', a:'人間としての成長' },
+
+  // ── PLOT ──
+  { cat:'plot', q:'「プロット」の本質とは、出来事の羅列をどのようなものに変換することですか？', a:'感情を揺さぶる因果律' },
+  { cat:'plot', q:'人間が最もカタルシスを感じるとされる、物語の黄金比率の構成を何と呼びますか？', a:'3幕構成' },
+  { cat:'plot', q:'3幕構成の各段階は、「設定」、「対立」、そして最後は何ですか？', a:'解決' },
+  { cat:'plot', q:'「サウスパーク」の制作者が提唱する、シーン同士を繋ぐ際に避けるべき接続詞は何ですか？', a:'そして（And Then）' },
+  { cat:'plot', q:'プロットの強度を高めるために、シーンの繋がりは「だから（Therefore）」か「_____」であるべきです。', a:'しかし（But）' },
+  { cat:'plot', q:'物語の中盤で方向性を反転させ、中弛みを防ぐためのポイントを何と呼びますか？', a:'ミッドポイント' },
+  { cat:'plot', q:'冒頭10%までに起こり、主人公を「引き返せない旅」へ強制的に出発させる事件を何と呼びますか？', a:'インサイティング・インシデント' },
+  { cat:'plot', q:'プロットの検証でAI（LLM）を用いる際、どのような「チェッカー」として活用するのが有効ですか？', a:'構造のバグチェッカー' },
+  { cat:'plot', q:'3幕構成において、物語の最初に行われるべきことは何ですか？', a:'設定（日常の描写など）' },
+  { cat:'plot', q:'3幕構成において、物語の第2幕で中心となる要素は何ですか？', a:'対立（葛藤）' },
+  { cat:'plot', q:'サウスパーク方式で「そして」を排除する理由は、全シーンを前のシーンの「_____」にするためです。', a:'結果' },
+  { cat:'plot', q:'インサイティング・インシデントは、物語の全体の何％までに起こるべきですか？', a:'10%' },
+  { cat:'plot', q:'プロットとストーリーの違いにおいて、プロットが重点を置くのは何ですか？', a:'感情を揺さぶる因果関係（なぜ起きたか）' },
+
+  // ── SCREENPLAY ──
+  { cat:'screenplay', q:'「シナリオ／脚本」の本質とは、文学的な言葉を何に翻訳することですか？', a:'カメラとマイクで捉えられる物理現象' },
+  { cat:'screenplay', q:'脚本は読ませるための小説ではなく、映像を作るための「_____」である。', a:'設計書' },
+  { cat:'screenplay', q:'映像表現の絶対原則とされる「Show, Don\'t Tell」を日本語で言うと何ですか？', a:'語るな、見せろ' },
+  { cat:'screenplay', q:'「私は怒っている」と台詞で言わずに、手の動きや呼吸などの「_____」で感情を推測させます。', a:'物理的な行動（ト書き）' },
+  { cat:'screenplay', q:'台詞の裏に隠された、真の意味や感情の流れを何と呼びますか？', a:'サブテキスト' },
+  { cat:'screenplay', q:'脚本内の「ト書き」において、「美しい部屋」といった抽象的な表現を避け、何を詳細に描写すべきですか？', a:'物質のディテール（光、調度品、質感など）' },
+  { cat:'screenplay', q:'人間が物理現象に落とし込んだ具体的なト書きは、AIにおいてどのような役割を果たしますか？', a:'高品質なプロンプト' },
+  { cat:'screenplay', q:'脚本において、説明的な台詞が多用されると作品はどうなると述べられていますか？', a:'チープになる' },
+  { cat:'screenplay', q:'ト書きで「光の差し込み方」まで詳細に書く理由は、それがAIへの何になるからですか？', a:'視覚的ディテールの指定（プロンプト）' },
+  { cat:'screenplay', q:'脚本執筆時、読者の脳内に何を映し出す密度で勝負すべきですか？', a:'映像の密度' },
+  { cat:'screenplay', q:'「Show, Don\'t Tell」に従うとき、キャラクターが悲しんでいることをどう表現すべきですか？', a:'言葉で「悲しい」と言わず、震える背中や滴る涙などで見せる。' },
+
+  // ── STORYBOARD ──
+  { cat:'storyboard', q:'「絵コンテ」の本質とは、観客の「視線の誘導」と「_____」を支配することです。', a:'感情の時間軸' },
+  { cat:'storyboard', q:'絵コンテは単なるイラストの集合ではなく、情報を与えるタイミングを何単位で確定させる工程ですか？', a:'ミリ秒単位' },
+  { cat:'storyboard', q:'カメラのアングルやサイズを決める際、演出上不可欠な要素は何ですか？', a:'選択した理由（根拠）' },
+  { cat:'storyboard', q:'キャラクターの心の動揺を見せたい場合、一般的にどのようなサイズで撮影しますか？', a:'クローズアップ（顔の寄り）' },
+  { cat:'storyboard', q:'対象の圧倒的な権力や恐怖を描きたい場合、どのようなアングルが有効ですか？', a:'ローアングル' },
+  { cat:'storyboard', q:'会話シーンで二人の位置関係を正しく伝えるための世界基準のルールを何と呼びますか？', a:'イマジナリーライン（180度ルール）' },
+  { cat:'storyboard', q:'イマジナリーラインを意図なく破った場合、観客にどのような悪影響を与えますか？', a:'空間認識の崩壊（冷める）' },
+  { cat:'storyboard', q:'カットが変わる際の、被写体の動きの向きや勢いのことを何と呼びますか？', a:'ベクトル（編集運動）' },
+  { cat:'storyboard', q:'動画生成AIを使う際、AIが出した映像を並べるのではなく、自分のコンテにパワーをどうすべきですか？', a:'強制的にハメ込む（ディレクションする）' },
+  { cat:'storyboard', q:'動画AIの制御において、カメラの左右の動きを何と呼びますか？', a:'Pan（パン）' },
+  { cat:'storyboard', q:'動画AIの制御において、カメラの上下の動きを何と呼びますか？', a:'Tilt（チルト）' },
+  { cat:'storyboard', q:'動画AIの制御において、被写体に寄る、または引く動きを何と呼びますか？', a:'Zoom（ズーム）' },
+  { cat:'storyboard', q:'絵コンテの段階で計算しておくべき、時間の連続性を生む要素は何ですか？', a:'インとアウトの編集運動（ベクトル）' },
+];
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let currentCat = 'all';
+let deck = [];
+let idx = 0;
+let flipped = false;
+let learned = new Set();
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function getCat(id) { return CATEGORIES.find(c => c.id === id); }
+
+function getDeck(catId) {
+  const cards = catId === 'all' ? RAW_CARDS : RAW_CARDS.filter(c => c.cat === catId);
+  return cards.map((c, i) => ({ ...c, _id: i }));
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function totalLearned() {
+  // count unique learned across all cards
+  return learned.size;
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function renderTabs() {
+  const bar = document.getElementById('tabsBar');
+  bar.innerHTML = CATEGORIES.map(cat => {
+    const count = cat.id === 'all' ? RAW_CARDS.length : RAW_CARDS.filter(c => c.cat === cat.id).length;
+    return `<button class="tab-btn${cat.id === currentCat ? ' active' : ''}"
+      data-cat="${cat.id}" onclick="selectCat('${cat.id}')">
+      <span class="tab-dot" style="background:${cat.color}"></span>
+      ${cat.name}
+      <span class="tab-count">${count}</span>
+    </button>`;
+  }).join('');
+}
+
+function renderHero() {
+  const cat = getCat(currentCat);
+  const count = deck.length;
+  const learnedInCat = deck.filter(c => learned.has(c.q)).length;
+  document.getElementById('categoryHero').innerHTML = `
+    <div class="hero-image">
+      <img src="${cat.image}" alt="${cat.name}" loading="lazy"/>
+    </div>
+    <div class="hero-content">
+      <div class="hero-tag">${cat.tag}</div>
+      <div class="hero-title" style="color:${cat.color}">${cat.title}</div>
+      <div class="hero-desc">${cat.desc}</div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="stat-value" style="color:${cat.color}">${count}</span>
+          <span class="stat-label">TOTAL CARDS</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-value" style="color:#ffd60a">${learnedInCat}</span>
+          <span class="stat-label">LEARNED</span>
+        </div>
+        <div class="hero-stat">
+          <span class="stat-value" style="color:#f72585">${count - learnedInCat}</span>
+          <span class="stat-label">REMAINING</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCard() {
+  const cat = getCat(currentCat);
+  const card = deck[idx];
+  if (!card) return;
+
+  // un-flip
+  const scene = document.getElementById('cardScene');
+  scene.classList.remove('flipped');
+  flipped = false;
+
+  // question highlight blanks
+  const qHTML = card.q.replace(/_____/g, '<mark>_____</mark>');
+  document.getElementById('cardQuestion').innerHTML = qHTML;
+  document.getElementById('cardAnswer').textContent = card.a;
+
+  // sub text for concept cards
+  const subMap = {
+    'ログライン': '1〜2行で物語の全容、葛藤、魅力を伝える設計図。ハリウッドの出発点。',
+    'サブテキスト': '言葉の裏に隠された本当の意味。セリフと感情のズレが深みを生む。',
+    'イマジナリーライン（180度ルール）': '会話する二人の位置関係を維持するための世界基準ルール。',
+    'ミッドポイント': '物語のちょうど真ん中で起こる、方向を反転させる大きな転換点。',
+  };
+  document.getElementById('cardAnswerSub').textContent = subMap[card.a] || '';
+
+  document.getElementById('cardNumBadge').textContent = `${idx + 1} / ${deck.length}`;
+  document.getElementById('cardCatBadge').textContent = getCat(card.cat).name;
+  document.getElementById('cardCatBadge').style.color = getCat(card.cat).color;
+  document.getElementById('cardCatBadge').style.borderColor = getCat(card.cat).color;
+
+  // nav
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === deck.length - 1;
+  document.getElementById('deckPos').textContent = `カード ${idx + 1} / ${deck.length}`;
+
+  // progress
+  const pct = deck.length ? ((idx + 1) / deck.length) * 100 : 0;
+  document.getElementById('cardProgressFill').style.width = pct + '%';
+
+  // completion
+  const allLearned = deck.every(c => learned.has(c.q));
+  document.getElementById('cardScene').style.display = allLearned ? 'none' : 'block';
+  const banner = document.getElementById('completionBanner');
+  banner.classList.toggle('show', allLearned);
+  if (allLearned) {
+    document.getElementById('completionSub').textContent = `このセクションの全${deck.length}枚を習得しました！`;
+  }
+
+  updateRing();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('cardsGrid');
+  const cat = getCat(currentCat);
+  grid.innerHTML = deck.map((card, i) => {
+    const isLearned = learned.has(card.q);
+    return `<div class="mini-card${isLearned ? ' learned' : ''}"
+      style="--accent:${getCat(card.cat).color}; cursor:pointer"
+      onclick="jumpTo(${i})"
+    >
+      <div class="mini-num">#${i + 1}</div>
+      <div class="mini-q">${card.q}</div>
+      <div class="mini-a" style="color:${getCat(card.cat).color}">${card.a}</div>
+    </div>`;
+  }).join('');
+
+  // Color the left bar
+  grid.querySelectorAll('.mini-card').forEach((el, i) => {
+    const c = deck[i];
+    el.style.setProperty('--accent', getCat(c.cat).color);
+    el.querySelector('::before'); // CSS handles it
+    el.style.borderLeftColor = getCat(c.cat).color;
+    el.style.borderLeftWidth = '3px';
+  });
+}
+
+function updateRing() {
+  const total = RAW_CARDS.length;
+  const done = totalLearned();
+  const pct = total ? done / total : 0;
+  const circ = 2 * Math.PI * 25;
+  const offset = circ * (1 - pct);
+  document.getElementById('ringFill').style.strokeDashoffset = offset;
+  document.getElementById('ringLabel').textContent = Math.round(pct * 100) + '%';
+}
+
+// ══════════════════════════════════════════════
+//  ACTIONS
+// ══════════════════════════════════════════════
+function selectCat(id) {
+  currentCat = id;
+  deck = getDeck(id);
+  idx = 0;
+  renderTabs();
+  renderHero();
+  renderCard();
+  renderGrid();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function jumpTo(i) {
+  idx = i;
+  document.getElementById('cardScene').style.display = 'block';
+  document.getElementById('completionBanner').classList.remove('show');
+  renderCard();
+  document.getElementById('cardScene').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function flipCard() {
+  flipped = !flipped;
+  document.getElementById('cardScene').classList.toggle('flipped', flipped);
+}
+
+function navigate(dir) {
+  idx = Math.max(0, Math.min(deck.length - 1, idx + dir));
+  renderCard();
+}
+
+function rateCard(good) {
+  const card = deck[idx];
+  if (good) {
+    learned.add(card.q);
+  } else {
+    learned.delete(card.q);
+  }
+  renderHero();
+  renderGrid();
+  updateRing();
+  if (idx < deck.length - 1) navigate(1);
+  else renderCard(); // check completion
+}
+
+// ══════════════════════════════════════════════
+//  EVENT LISTENERS
+// ══════════════════════════════════════════════
+document.getElementById('cardScene').addEventListener('click', flipCard);
+document.getElementById('prevBtn').addEventListener('click', () => navigate(-1));
+document.getElementById('nextBtn').addEventListener('click', () => navigate(1));
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  deck = shuffle(deck);
+  idx = 0;
+  renderCard();
+  renderGrid();
+});
+document.getElementById('rateAgain').addEventListener('click', (e) => { e.stopPropagation(); rateCard(false); });
+document.getElementById('rateGood').addEventListener('click',  (e) => { e.stopPropagation(); rateCard(true); });
+document.getElementById('restartBtn').addEventListener('click', () => {
+  deck.forEach(c => learned.delete(c.q));
+  idx = 0;
+  document.getElementById('completionBanner').classList.remove('show');
+  document.getElementById('cardScene').style.display = 'block';
+  renderCard();
+  renderHero();
+  renderGrid();
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') navigate(1);
+  else if (e.key === 'ArrowLeft') navigate(-1);
+  else if (e.key === ' ') { e.preventDefault(); flipCard(); }
+  else if (e.key === 'g' || e.key === 'G') rateCard(true);
+  else if (e.key === 'a' || e.key === 'A') rateCard(false);
+});
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+deck = getDeck(currentCat);
+renderTabs();
+renderHero();
+renderCard();
+renderGrid();
+</script>
+</body>
+</html>

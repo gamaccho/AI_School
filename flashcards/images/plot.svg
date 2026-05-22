@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="bg4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1f1a"/>
+      <stop offset="100%" stop-color="#1a1a0d"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg4)"/>
+  <!-- 3-act structure arc -->
+  <path d="M 50 220 Q 130 80 200 150 Q 270 220 350 60" fill="none" stroke="#00f5d4" stroke-width="2.5" opacity="0.8"/>
+  <!-- Act markers -->
+  <circle cx="50" cy="220" r="6" fill="#00f5d4"/>
+  <circle cx="200" cy="150" r="6" fill="#ffd60a"/>
+  <circle cx="350" cy="60" r="6" fill="#f72585"/>
+  <!-- Labels -->
+  <text x="50" y="245" text-anchor="middle" font-family="monospace" font-size="9" fill="#00f5d4">Act 1</text>
+  <text x="200" y="172" text-anchor="middle" font-family="monospace" font-size="9" fill="#ffd60a">Mid Point</text>
+  <text x="350" y="48" text-anchor="middle" font-family="monospace" font-size="9" fill="#f72585">Climax</text>
+  <!-- Inciting incident -->
+  <circle cx="90" cy="200" r="4" fill="#ffd60a" opacity="0.7"/>
+  <text x="90" y="215" text-anchor="middle" font-family="monospace" font-size="8" fill="#ffd60a" opacity="0.8">II</text>
+  <!-- But/Therefore arrows -->
+  <text x="130" y="130" font-family="serif" font-style="italic" font-size="12" fill="#f72585" opacity="0.8">BUT...</text>
+  <text x="250" y="100" font-family="serif" font-style="italic" font-size="12" fill="#00f5d4" opacity="0.8">THEREFORE</text>
+  <!-- X axis -->
+  <line x1="40" y1="260" x2="370" y2="260" stroke="#ffffff" stroke-width="1" opacity="0.2"/>
+  <text x="200" y="285" text-anchor="middle" font-family="monospace" font-size="9" fill="#ffffff" opacity="0.4" letter-spacing="2">EMOTIONAL CAUSALITY</text>
+</svg>
